@@ -11,6 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import matplotlib.backends.backend_pdf
+import pandas as pd
 ptr = 0
 
 
@@ -72,36 +73,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
 
     def browse_files(self):  # Browsing files function
-        files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only txt or CSV or xls', os.getenv('HOME'),
-                                                           "csv(*.csv);; text(*.txt) ;; xls(*.xls)")
+        files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only CSV ', os.getenv('HOME'), "csv(*.csv)")
         path = files_name[0]
-        if pathlib.Path(path).suffix == ".txt":
-            data = np.genfromtxt(path, delimiter=',')
-            x = data[:, 0]
-            y = data[:, 1]
-            self.data = data
-            self.x_txt = list(x[:])
-            self.y_txt = list(y[:])
-            
-
-        elif pathlib.Path(path).suffix == ".csv":
-            data = np.genfromtxt(path, delimiter=' ')
-            x = data[:, 0]
-            y = data[:, 1]
-            self.data = data
-            self.x_csv = list(x[:])
-            self.y_csv = list(y[:])
-            self.horizontalScrollBar.setMaximum(int(max(self.x_csv)))
-            self.signals_plot_widget.setYRange(min(self.y_csv),max(self.y_csv))
-            self.timer.start()
-
-
-        elif pathlib.Path(path).suffix == ".xls":
-            data = np.genfromtxt(path, delimiter=',')
-            x = data[:, 0]
-            y = data[:, 1]
-            self.x_xls = list(x[:])
-            self.y_xls = list(y[:])
+        
+        pathlib.Path(path).suffix == ".csv"
+        data = pd.read_csv(path)
+        self.y_csv = data.values[:, 1]
+        self.x_csv = data.values[:, 0]
+        
+        # x = data[:, 0]
+        # y = data[:, 1]
+        # self.data = data
+        # self.x_csv = list(x[:])
+        # self.y_csv = list(y[:])
+        self.horizontalScrollBar.setMaximum(int(max(self.x_csv)))
+        self.signals_plot_widget.setYRange(min(self.y_csv),max(self.y_csv))
+        self.timer.start()
         
 
     def update_plot_data(self):
