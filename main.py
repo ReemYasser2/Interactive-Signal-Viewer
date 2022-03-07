@@ -1,5 +1,4 @@
 from PyQt5 import QtWidgets, QtCore, uic
-from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 import os
@@ -7,7 +6,7 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 #from ui import Ui_MainWindow
-import statistics
+import statistics # fi 7aga msh mazboota
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -52,12 +51,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.maxWindow = 1
         self.play_button.clicked.connect(self.start)
         self.stop_button.clicked.connect(self.stop)
+        self.OK_button.clicked.connect(self.change_color)
         self.horizontalScrollBar.setMaximum(len(self.x_csv))
         self.horizontalScrollBar.setValue(0)
-        pen = pg.mkPen(color=(0, 255, 0))
-
-        self.data_line = self.signals_plot_widget.plot([0], [0], pen=pen)
+        self.pen = pg.mkPen(color=(255, 255, 255))
+        self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
         
+
+    def change_color(self):
+        
+        if self.Color_button.currentText() == "Blue":
+            self.pen = pg.mkPen(color=(0, 0, 255))
+        elif self.Color_button.currentText() == "Red":
+            self.pen = pg.mkPen(color=(255, 0, 0))
+        elif self.Color_button.currentText() == "Green":
+            self.pen = pg.mkPen(color=(0, 255, 0))
+        elif self.Color_button.currentText() == "White":
+            self.pen = pg.mkPen(color=(255, 255, 255))
+
+        self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
 
     def browse_files(self):  # Browsing files function
         files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only txt or CSV or xls', os.getenv('HOME'),
@@ -70,8 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data = data
             self.x_txt = list(x[:])
             self.y_txt = list(y[:])
-            print(self.x_txt)
-            print(self.x_txt)
+            
 
         elif pathlib.Path(path).suffix == ".csv":
             data = np.genfromtxt(path, delimiter=' ')
@@ -108,15 +119,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ptr += 1
        
 
-
-
     def data_stats(self, amplitude, time): # function to calculate stats for exporting to pdf
-        # self.mean =statistics.mean(amplitude)
-        # self.std_dev = statistics.stdev(amplitude)
+        self.mean =statistics.mean(amplitude)
+        self.std_dev = statistics.stdev(amplitude)
         self.min_amplitude = min(amplitude)
         self.max_amplitude = max(amplitude)
         self.duration = max(time)
-        return self.min_amplitude, self.max_amplitude, self.duration #self.mean, self.std_dev,
+        return self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration #self.mean, self.std_dev,
 
     def getFigure(self): # for exporting to pdf
         fig = plt.figure(figsize=(10, 5))
@@ -127,10 +136,10 @@ class MainWindow(QtWidgets.QMainWindow):
         document = SimpleDocTemplate("report.pdf", pagesize=letter)
         items = [] 
         #self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_txt,self.x_txt)     
-        self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_csv, self.x_csv) 
+        self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_csv, self.x_csv) 
         # self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_xls, self.x_xls) 
-        data= [['','Mean', 'Standard Devition', 'Minimum', 'Maximum', 'Duration'],
-        ['Channel 1','', '', self.min_amplitude, self.max_amplitude, self.duration]]
+        data= [['','Mean', 'Standard Deviation', 'Minimum', 'Maximum', 'Duration'],
+        ['Channel 1',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration]]
         # ['Channel 2',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration],
         # ['Channel 3',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration]]
         t=Table(data,6*[1.5*inch], 2*[0.5*inch])
