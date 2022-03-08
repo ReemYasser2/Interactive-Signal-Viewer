@@ -13,6 +13,7 @@ from reportlab.lib.pagesizes import letter, inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import matplotlib.backends.backend_pdf
 import pandas as pd
+from PyPDF2 import PdfFileMerger
 ptr = 0
 speed = 1
 x_axis0 = [0,0]
@@ -59,6 +60,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.horizontalScrollBar.setValue(0)
         self.speed_up_button.clicked.connect(self.speed_up)
         self.speed_down_button.clicked.connect(self.speed_down)
+        self.zoom_IN_button.clicked.connect(self.zoomIn)
+        self.zoom_OUT_button.clicked.connect(self.zoomOut)
+        self.zoom_factor = 1
         self.pen = pg.mkPen(color=(255, 255, 255))
         self.pencolor_channel=['g','g','g']
         global ChanneloneSelected
@@ -70,17 +74,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show0=True
         self.show1=True
         self.show2=True
-        self.Show_Button.clicked.connect(self.Show_signals)
-        
-       
-        
+        self.Show_Button.clicked.connect(self.Show_signals) 
         self.Hide_Button.clicked.connect(self.Hide_signals)
         
        # self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pencolor_channel[0])
         #self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
-        
 
-        
+
+    def zoomIn(self):
+        self.signals_plot_widget.setYRange(-0.99 * self.zoom_factor, 0.99 * self.zoom_factor)
+        self.zoom_factor -=0.05
+    
+    def zoomOut(self):
+        self.signals_plot_widget.setYRange(-1.01 * self.zoom_factor, 1.01 * self.zoom_factor)
+        #self.signals_plot_widget.setXRange(-1.001 * self.zoom_out_factor, 1.001 * self.zoom_out_factor)
+        self.zoom_factor +=0.05
 
     def browse_files(self):  # Browsing files function
         files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only CSV ', os.getenv('HOME'), "csv(*.csv)")
@@ -96,13 +104,19 @@ class MainWindow(QtWidgets.QMainWindow):
         global y_axis1
         global x_axis2
         global y_axis2
-            
+
+        self.SpectogramWidget.canvas.axes.clear()
+        self.SpectogramWidget.canvas.axes.specgram(self.y_csv, Fs=1/max(self.y_csv), cmap="rainbow")
+        self.SpectogramWidget.canvas.axes.legend(('cosinus', 'sinus'),loc='upper right')
+        self.SpectogramWidget.canvas.axes.set_title('Spectrogram')
+        self.SpectogramWidget.canvas.draw()
+        self.timer.start()
+             
         if int(self.channel_combobox.currentIndex()) == 0:
          x_axis0=self.x_csv
          y_axis0=self.y_csv
          self.ChanneloneSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis0)))
-         #self.signals_plot_widget.setYRange(min(x_axis0),max(y_axis0))
          self.timer.start()
          
         elif int(self.channel_combobox.currentIndex()) == 1:
@@ -110,7 +124,6 @@ class MainWindow(QtWidgets.QMainWindow):
          y_axis1=self.y_csv
          self.ChannelTwoSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis1)))
-         #self.signals_plot_widget.setYRange(min(x_axis1),max(y_axis1))
          self.timer.start()
          
          
@@ -119,7 +132,6 @@ class MainWindow(QtWidgets.QMainWindow):
          y_axis2=self.y_csv
          self.ChannelThreeSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis2)))
-         #self.signals_plot_widget.setYRange(min(x_axis2),max(y_axis2))
          self.timer.start()
 
         self.signals_plot_widget.setYRange(-1,1)
@@ -250,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow):
         global y_axis2
         
         
-        document = SimpleDocTemplate("report.pdf", pagesize=letter)
+        document = SimpleDocTemplate("statistics.pdf", pagesize=letter)
         items = [] 
         mean0, std_dev0, min_amplitude0, max_amplitude0, duration0 = self.data_stats(y_axis0, x_axis0)     
         mean1, std_dev1, min_amplitude1, max_amplitude1, duration1 = self.data_stats(y_axis1, x_axis1)
@@ -278,6 +290,13 @@ class MainWindow(QtWidgets.QMainWindow):
         pdf.savefig(self.get_channel2())
         pdf.savefig(self.get_channel3())
         pdf.close()
+
+        pdfs = ['figures.pdf', 'statistics.pdf']
+        merger = PdfFileMerger()
+        for pdf in pdfs:
+            merger.append(pdf)
+        merger.write("Full Report.pdf")
+        merger.close()
 
     def start(self):
         self.timer.start(150)
