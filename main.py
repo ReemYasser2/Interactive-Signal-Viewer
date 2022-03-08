@@ -21,7 +21,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         #Load the UI Page
         super(MainWindow, self).__init__(*args, **kwargs)
-        uic.loadUi('dsp2.ui', self)
+        uic.loadUi('dspxc2.ui', self)
         
         # self.ui = Ui_MainWindow() 
         # self.ui.setupUi(self)
@@ -52,25 +52,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.maxWindow = 1
         self.play_button.clicked.connect(self.start)
         self.stop_button.clicked.connect(self.stop)
-        self.OK_button.clicked.connect(self.change_color)
+       # self.OK_button.clicked.connect(self.change_color)
         self.horizontalScrollBar.setMaximum(len(self.x_csv))
         self.horizontalScrollBar.setValue(0)
         self.pen = pg.mkPen(color=(255, 255, 255))
         self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
+        self.pencolor_channel=['g','g','g','g']
+        global ChanneloneSelected
+        global ChannelTwoSelected
+        global ChannelThreeSelected
+        self.ChannelTwoSelected = False
+        self.ChannelThreeSelected = False
+        self.ChanneloneSelected= False
+        
         
 
-    def change_color(self):
+   # def change_color(self):
         
-        if self.Color_button.currentText() == "Blue":
-            self.pen = pg.mkPen(color=(0, 0, 255))
-        elif self.Color_button.currentText() == "Red":
-            self.pen = pg.mkPen(color=(255, 0, 0))
-        elif self.Color_button.currentText() == "Green":
-            self.pen = pg.mkPen(color=(0, 255, 0))
-        elif self.Color_button.currentText() == "White":
-            self.pen = pg.mkPen(color=(255, 255, 255))
+       # if self.Color_button.currentText() == "Blue":
+        #    self.pen = pg.mkPen(color=(0, 0, 255))
+        #elif self.Color_button.currentText() == "Red":
+         #   self.pen = pg.mkPen(color=(255, 0, 0))
+        #elif self.Color_button.currentText() == "Green":
+         #   self.pen = pg.mkPen(color=(0, 255, 0))
+        #elif self.Color_button.currentText() == "White":
+         #   self.pen = pg.mkPen(color=(255, 255, 255))
 
-        self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
+        #self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
 
     def browse_files(self):  # Browsing files function
         files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only CSV ', os.getenv('HOME'), "csv(*.csv)")
@@ -80,28 +88,96 @@ class MainWindow(QtWidgets.QMainWindow):
         data = pd.read_csv(path)
         self.y_csv = data.values[:, 1]
         self.x_csv = data.values[:, 0]
+        global xax1
+        global yax1
+        global xax2
+        global yax2
+        global xax0
+        global yax0
+        if int(self.channel_combobox.currentIndex()) == 0:
+         xax0=self.x_csv
+         yax0=self.y_csv
+         self.ChanneloneSelected = True
+         self.horizontalScrollBar.setMaximum(int(max(xax0)))
+         self.signals_plot_widget.setYRange(min(xax0),max(yax0))
+         self.timer.start()
+         
+        elif int(self.channel_combobox.currentIndex()) == 1:
+         xax1=self.x_csv
+         yax1=self.y_csv
+         self.ChannelTwoSelected = True
+         self.horizontalScrollBar.setMaximum(int(max(xax1)))
+         self.signals_plot_widget.setYRange(min(xax1),max(yax1))
+         self.timer.start()
+         
+         
+        elif int(self.channel_combobox.currentIndex()) == 2:
+         xax2=self.x_csv
+         yax2=self.y_csv
+         self.ChannelThreeSelected = True
+         self.horizontalScrollBar.setMaximum(int(max(xax2)))
+         self.signals_plot_widget.setYRange(min(xax2),max(yax2))
+         self.timer.start()
+         
+
+         
+
+
+
         
         # x = data[:, 0]
         # y = data[:, 1]
         # self.data = data
         # self.x_csv = list(x[:])
         # self.y_csv = list(y[:])
-        self.horizontalScrollBar.setMaximum(int(max(self.x_csv)))
-        self.signals_plot_widget.setYRange(min(self.y_csv),max(self.y_csv))
-        self.timer.start()
+    
         
 
     def update_plot_data(self):
         global ptr
+        self.pencolors=['b','r','g','w']
+        #currentcolor = str(self.Color_button.currentText())
+        global colorindex
+        if self.channel_combobox.currentIndex()==0:
+            colorindex = int(self.Color_button.currentIndex())
+            self.pencolor_channel[0]=self.pencolors[colorindex]
+        elif self.channel_combobox.currentIndex()==1:
+            colorindex = int(self.Color_button.currentIndex())
+            self.pencolor_channel[1]=self.pencolors[colorindex]      
+        elif self.channel_combobox.currentIndex()==2:
+            colorindex = int(self.Color_button.currentIndex())
+            self.pencolor_channel[2]=self.pencolors[colorindex]
+        
    
         if ptr <= 40:
-
-            self.data_line.setData(self.x_csv[0:ptr], self.y_csv[0:ptr])  # Update the data.
-            self.signals_plot_widget.setXRange(0, self.x_csv[ptr] )
+            if self.ChanneloneSelected==True:
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(xax0[0:ptr], yax0[0:ptr])  # Update the data.
+             self.signals_plot_widget.setXRange(0, xax0[ptr] )
+            elif self.ChannelTwoSelected==True:
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(xax1[0:ptr], yax1[0:ptr])  # Update the data.
+             self.signals_plot_widget.setXRange(0, xax1[ptr] )
+            elif self.ChannelThreeSelected==True:
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(xax2[0:ptr], yax2[0:ptr])  # Update the data.
+             self.signals_plot_widget.setXRange(0, xax2[ptr] )
+                
+                 
 
         else:
-            self.data_line.setData(self.x_csv[0:ptr], self.y_csv[0:ptr])
-            self.signals_plot_widget.setXRange(self.x_csv[ptr - 40], self.x_csv[ptr - 1])
+            if self.ChanneloneSelected==True:
+
+
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(xax0[0:ptr], yax0[0:ptr])
+            
+             self.signals_plot_widget.setXRange(xax0[ptr - 40], xax0[ptr - 1])
+            elif self.ChannelTwoSelected==True :
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(xax1[0:ptr], yax1[0:ptr])
+             self.signals_plot_widget.setXRange(xax1[ptr - 40], xax1[ptr - 1])
+            elif self.ChannelThreeSelected==True :
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(xax2[0:ptr], yax2[0:ptr])
+             self.signals_plot_widget.setXRange(xax2[ptr - 40], xax2[ptr - 1])
+
+
+
 
         ptr += 1
        
