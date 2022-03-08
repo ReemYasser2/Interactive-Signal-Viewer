@@ -221,7 +221,7 @@ color: rgb(255, 255, 255);
 font:(255,255,255);</string>
         </property>
         <property name="text">
-         <string>speed</string>
+         <string>Speed</string>
         </property>
        </widget>
       </item>
@@ -324,11 +324,6 @@ font:(255,255,255);</string>
        <string>Green</string>
       </property>
      </item>
-     <item>
-      <property name="text">
-       <string>White</string>
-      </property>
-     </item>
     </widget>
     <widget class="QLabel" name="label">
      <property name="geometry">
@@ -343,19 +338,6 @@ font:(255,255,255);</string>
       <string>   Colour</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="OK_button">
-     <property name="geometry">
-      <rect>
-       <x>290</x>
-       <y>90</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>OK</string>
-     </property>
-    </widget>
     <widget class="QPushButton" name="Show_Button">
      <property name="geometry">
       <rect>
@@ -366,7 +348,7 @@ font:(255,255,255);</string>
       </rect>
      </property>
      <property name="text">
-      <string>show</string>
+      <string>Show</string>
      </property>
     </widget>
     <widget class="QPushButton" name="Hide_Button">
@@ -417,7 +399,7 @@ color: rgb(255, 255, 255);
 font:(255,255,255);</string>
     </property>
     <property name="text">
-     <string>select chaneel :</string>
+     <string>select channel :</string>
     </property>
    </widget>
    <widget class="QScrollBar" name="horizontalScrollBar">
