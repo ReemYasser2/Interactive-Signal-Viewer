@@ -1,11 +1,11 @@
 from PyQt5 import QtWidgets, QtCore, uic
+from PyQt5.QtWidgets import QSlider
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 import os
 import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
-#from ui import Ui_MainWindow
 import statistics # fi 7aga msh mazboota
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, inch
@@ -13,7 +13,13 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import matplotlib.backends.backend_pdf
 import pandas as pd
 ptr = 0
-
+speed = 1
+x_axis0 = [0,0]
+y_axis0 = [0,0]
+x_axis1 = [0,0]
+y_axis1 = [0,0]
+x_axis2 = [0,0]
+y_axis2 = [0,0]
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -22,41 +28,36 @@ class MainWindow(QtWidgets.QMainWindow):
         #Load the UI Page
         super(MainWindow, self).__init__(*args, **kwargs)
         uic.loadUi('dspxc2.ui', self)
+        # defining variables for plot
+        self.counter = 0
+        self.max_time = 0.12
+        self.max_time_init= 0
+        # defining lists of amplitude and time, x and y respectively
+        self.x_csv = []
+        self.y_csv = []
+        # defining statistics variables
+        self.mean = 0
+        self.std_dev = 0
+        self.min_amplitude = 0
+        self.max_amplitude = 0
+        self.duration = 0   
+        self.maxWindow = 1
         
         # self.ui = Ui_MainWindow() 
         # self.ui.setupUi(self)
         self.timer = QtCore.QTimer()
         self.timer.setInterval(150)
         self.timer.timeout.connect(self.update_plot_data)
-        # calling browse_files function when browse button is clicked
+
         self.Browse_Button.clicked.connect(self.browse_files)
         self.Save_Button.clicked.connect(self.save)  
-
-        # defining variables for plot
-        self.counter = 0
-        self.max_time = 0.12
-        self.max_time_init= 0
-        # defining lists of amplitude and time for all file types
-        self.x_txt = []
-        self.y_txt = []
-        self.x_csv = []
-        self.y_csv = []
-        self.x_xls = []
-        self.y_xls = []
-        # defining statistics variables
-        self.mean = 0
-        self.std_dev = 0
-        self.min_amplitude = 0
-        self.max_amplitude = 0
-        self.duration = 0   # sill needs fixing
-        self.maxWindow = 1
         self.play_button.clicked.connect(self.start)
         self.stop_button.clicked.connect(self.stop)
-       # self.OK_button.clicked.connect(self.change_color)
         self.horizontalScrollBar.setMaximum(len(self.x_csv))
         self.horizontalScrollBar.setValue(0)
+        self.speed_up_button.clicked.connect(self.speed_up)
+        self.speed_down_button.clicked.connect(self.speed_down)
         self.pen = pg.mkPen(color=(255, 255, 255))
-        self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
         self.pencolor_channel=['g','g','g']
         global ChanneloneSelected
         global ChannelTwoSelected
@@ -65,20 +66,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ChannelThreeSelected = False
         self.ChanneloneSelected= False
         
-        
-
-   # def change_color(self):
-        
-       # if self.Color_button.currentText() == "Blue":
-        #    self.pen = pg.mkPen(color=(0, 0, 255))
-        #elif self.Color_button.currentText() == "Red":
-         #   self.pen = pg.mkPen(color=(255, 0, 0))
-        #elif self.Color_button.currentText() == "Green":
-         #   self.pen = pg.mkPen(color=(0, 255, 0))
-        #elif self.Color_button.currentText() == "White":
-         #   self.pen = pg.mkPen(color=(255, 255, 255))
-
-        #self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pen)
 
     def browse_files(self):  # Browsing files function
         files_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open only CSV ', os.getenv('HOME'), "csv(*.csv)")
@@ -88,18 +75,19 @@ class MainWindow(QtWidgets.QMainWindow):
         data = pd.read_csv(path)
         self.y_csv = data.values[:, 1]
         self.x_csv = data.values[:, 0]
+        global x_axis0
+        global y_axis0
         global x_axis1
         global y_axis1
         global x_axis2
         global y_axis2
-        global x_axis0
-        global y_axis0
+            
         if int(self.channel_combobox.currentIndex()) == 0:
          x_axis0=self.x_csv
          y_axis0=self.y_csv
          self.ChanneloneSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis0)))
-         self.signals_plot_widget.setYRange(min(x_axis0),max(y_axis0))
+         #self.signals_plot_widget.setYRange(min(x_axis0),max(y_axis0))
          self.timer.start()
          
         elif int(self.channel_combobox.currentIndex()) == 1:
@@ -107,7 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
          y_axis1=self.y_csv
          self.ChannelTwoSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis1)))
-         self.signals_plot_widget.setYRange(min(x_axis1),max(y_axis1))
+         #self.signals_plot_widget.setYRange(min(x_axis1),max(y_axis1))
          self.timer.start()
          
          
@@ -116,25 +104,14 @@ class MainWindow(QtWidgets.QMainWindow):
          y_axis2=self.y_csv
          self.ChannelThreeSelected = True
          self.horizontalScrollBar.setMaximum(int(max(x_axis2)))
-         self.signals_plot_widget.setYRange(min(x_axis2),max(y_axis2))
+         #self.signals_plot_widget.setYRange(min(x_axis2),max(y_axis2))
          self.timer.start()
-         
 
-         
-
-
-
-        
-        # x = data[:, 0]
-        # y = data[:, 1]
-        # self.data = data
-        # self.x_csv = list(x[:])
-        # self.y_csv = list(y[:])
-    
-        
+        self.signals_plot_widget.setYRange(-1,1)
+              
 
     def update_plot_data(self):
-        global ptr
+        global ptr, speed
         self.pencolors=['b','r','g']
         #currentcolor = str(self.Color_button.currentText())
         global colorindex
@@ -149,38 +126,40 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pencolor_channel[2]=self.pencolors[colorindex]
         
    
-        if ptr <= 40:
+        if ptr <= 15:
+            self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)] )
             if self.ChanneloneSelected==True:
-             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:ptr], y_axis0[0:ptr])  # Update the data.
-             self.signals_plot_widget.setXRange(0, x_axis0[ptr] )
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])  # Update the data.
              if self.ChannelTwoSelected==True:
-                  self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:ptr], y_axis1[0:ptr])  # Update the data.
-                  self.signals_plot_widget.setXRange(0, x_axis1[ptr] )
+                  self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])  # Update the data.
                   if self.ChannelThreeSelected==True:
-                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:ptr], y_axis2[0:ptr])  # Update the data.
-                     self.signals_plot_widget.setXRange(0, x_axis2[ptr] )
-                
-                 
-
-        else:
-            if self.ChanneloneSelected==True:
-
-
-             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:ptr], y_axis0[0:ptr])
+                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
             
-             self.signals_plot_widget.setXRange(x_axis0[ptr - 40], x_axis0[ptr - 1])
+                     
+                
+        else:
+            self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
+            if self.ChanneloneSelected==True:
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])           
              if self.ChannelTwoSelected==True :
-                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:ptr], y_axis1[0:ptr])
-                 self.signals_plot_widget.setXRange(x_axis1[ptr - 40], x_axis1[ptr - 1])
+                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
                  if self.ChannelThreeSelected==True :
-                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:ptr], y_axis2[0:ptr])
-                     self.signals_plot_widget.setXRange(x_axis2[ptr - 40], x_axis2[ptr - 1])
-
-
-
-
-        ptr += 1
+                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
        
+        ptr += 1
+
+
+    def speed_up(self):
+        global speed
+        speed += 5
+
+    def speed_down(self):
+        global speed
+        if speed > 1:
+            speed -= 5
+        else: 
+            speed = 1
+ 
 
     def data_stats(self, amplitude, time): # function to calculate stats for exporting to pdf
         self.mean =statistics.mean(amplitude)
@@ -188,24 +167,56 @@ class MainWindow(QtWidgets.QMainWindow):
         self.min_amplitude = min(amplitude)
         self.max_amplitude = max(amplitude)
         self.duration = max(time)
-        return self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration #self.mean, self.std_dev,
+        return self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration 
 
-    def getFigure(self): # for exporting to pdf
+    def get_channel1(self): # for exporting to pdf
+        global x_axis0
+        global y_axis0
         fig = plt.figure(figsize=(10, 5))
-        plt.plot(self.x_csv, self.y_csv)
+        plt.plot(x_axis0, y_axis0)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        return fig
+    def get_channel2(self): # for exporting to pdf
+        global x_axis1
+        global y_axis1
+        fig = plt.figure(figsize=(10, 5))
+        plt.plot(x_axis1, y_axis1)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        return fig
+    def get_channel3(self): # for exporting to pdf
+        global x_axis2
+        global y_axis2
+        fig = plt.figure(figsize=(10, 5))
+        plt.plot(x_axis2, y_axis2)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
         return fig
 
     def save(self):
+        global x_axis0
+        global y_axis0
+        global x_axis1
+        global y_axis1
+        global x_axis2
+        global y_axis2
+        
+        
         document = SimpleDocTemplate("report.pdf", pagesize=letter)
         items = [] 
-        #self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_txt,self.x_txt)     
-        self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_csv, self.x_csv) 
-        # self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration = self.data_stats(self.y_xls, self.x_xls) 
-        data= [['','Mean', 'Standard Deviation', 'Minimum', 'Maximum', 'Duration'],
-        ['Channel 1',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration]]
-        # ['Channel 2',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration],
-        # ['Channel 3',self.mean, self.std_dev, self.min_amplitude, self.max_amplitude, self.duration]]
-        t=Table(data,6*[1.5*inch], 2*[0.5*inch])
+        mean0, std_dev0, min_amplitude0, max_amplitude0, duration0 = self.data_stats(y_axis0, x_axis0)     
+        mean1, std_dev1, min_amplitude1, max_amplitude1, duration1 = self.data_stats(y_axis1, x_axis1)
+        mean2, std_dev2, min_amplitude2, max_amplitude2, duration2 = self.data_stats(y_axis2, x_axis2)
+
+        
+        data= [['','Channel 1', 'Channel 2', 'Channel 3'],
+        ['Mean',mean0, mean1, mean2],
+        ['Standard Deviation', std_dev0, std_dev1, std_dev2],
+        ['Minimum', min_amplitude0, min_amplitude1, min_amplitude2],
+        ['Maximum', max_amplitude0, max_amplitude1, max_amplitude2],
+        ['Duration',duration0, duration1, duration2]]
+        t=Table(data,4*[2*inch], 6*[0.5*inch])
         t.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'RIGHT'),
         ('VALIGN',(0,0),(-1,-1),'CENTER'),
         ('ALIGN',(0,0),(-1,-1),'CENTER'),
@@ -215,15 +226,11 @@ class MainWindow(QtWidgets.QMainWindow):
         items.append(t)
         document.build(items)
 
-        pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
-        pdf.savefig(self.getFigure())
+        pdf = matplotlib.backends.backend_pdf.PdfPages("figures.pdf")
+        pdf.savefig(self.get_channel1())
+        pdf.savefig(self.get_channel2())
+        pdf.savefig(self.get_channel3())
         pdf.close()
-
-        # report = PdfPages('figures.pdf') # make user choose name(?)
-        # for signal in self.signals:
-        #     report.savefig(signal.getFigure())
-        #     report.savefig(signal.getSpectrogram())
-        # report.close()
 
     def start(self):
         self.timer.start(150)
