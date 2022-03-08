@@ -21,9 +21,7 @@ x_axis1 = [0,0]
 y_axis1 = [0,0]
 x_axis2 = [0,0]
 y_axis2 = [0,0]
-show0=True
-show1=True
-show2=True
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -69,6 +67,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ChannelTwoSelected = False
         self.ChannelThreeSelected = False
         self.ChanneloneSelected= False
+        self.show0=True
+        self.show1=True
+        self.show2=True
         self.Show_Button.clicked.connect(self.Show_signals)
         
        
@@ -138,51 +139,53 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.channel_combobox.currentIndex()==2:
             colorindex = int(self.Color_button.currentIndex())
             self.pencolor_channel[2]=self.pencolors[colorindex]
+        self.signals_plot_widget.clear()
         
-   
+
+        
+        
         if ptr <= 15:
             self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)] )
-            if self.ChanneloneSelected==True and show0==True:
+            if self.ChanneloneSelected==True and self.show0==True:
+             
              self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])  # Update the data.
-            if self.ChannelTwoSelected==True and show1==True:
+            if self.ChannelTwoSelected==True and self.show1==True:
+            
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])  # Update the data.
-            if self.ChannelThreeSelected==True and show2==True:
+            if self.ChannelThreeSelected==True and self.show2==True:
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
             
                      
                 
         else:
             self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
-            if self.ChanneloneSelected==True and show0==True:
-             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])           
-            if self.ChannelTwoSelected==True :
+            if self.ChanneloneSelected==True and self.show0==True:
+               self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])           
+            if self.ChannelTwoSelected==True and self.show1==True:
                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
-            if self.ChannelThreeSelected==True :
+            if self.ChannelThreeSelected==True and self.show2==True:
                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
        
         ptr += 1
 
     def Hide_signals(self):
-      global show0
-      global show1
-      global show2
+      self.signals_plot_widget.clear()
+     
       if self.ChanneloneSelected==True:
-         show0=False
-      if self.ChannelTwoSelected==True:
-         show1=False  
-      if self.ChannelTwoSelected==True:
-         show2=False  
+         self.show0=False
+      elif self.ChannelTwoSelected==True:
+          self.show1=False  
+      elif self.ChannelTwoSelected==True:
+         self.show2=False  
 
     def Show_signals(self) :
-      global show0
-      global show1
-      global show2 
+       
       if self.ChanneloneSelected==True:
-         show0=True
-      if self.ChannelTwoSelected==True:
-         show1=False  
-      if self.ChannelTwoSelected==True:
-         show2=False  
+         self.show0=True
+      elif self.ChannelTwoSelected==True:
+         self.show1=True
+      elif self.ChannelTwoSelected==True:
+         self.show2=False  
            
     def speed_up(self):
         global speed
