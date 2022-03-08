@@ -1,4 +1,6 @@
+from pickle import GLOBAL
 from PyQt5 import QtWidgets, QtCore, uic
+from PyQt5.QtWidgets import QSlider
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 import os
@@ -11,7 +13,6 @@ from reportlab.lib.pagesizes import letter, inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import matplotlib.backends.backend_pdf
 import pandas as pd
-from PyPDF2 import PdfFileMerger
 ptr = 0
 speed = 1
 x_axis0 = [0,0]
@@ -20,6 +21,7 @@ x_axis1 = [0,0]
 y_axis1 = [0,0]
 x_axis2 = [0,0]
 y_axis2 = [0,0]
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -59,12 +61,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.speed_down_button.clicked.connect(self.speed_down)
         self.pen = pg.mkPen(color=(255, 255, 255))
         self.pencolor_channel=['g','g','g']
-        # global ChanneloneSelected
-        # global ChannelTwoSelected
-        # global ChannelThreeSelected
+        global ChanneloneSelected
+        global ChannelTwoSelected
+        global ChannelThreeSelected
         self.ChannelTwoSelected = False
         self.ChannelThreeSelected = False
         self.ChanneloneSelected= False
+        self.show0=True
+        self.show1=True
+        self.show2=True
+        self.Show_Button.clicked.connect(self.Show_signals)
+        
+       
+        
+        self.Hide_Button.clicked.connect(self.Hide_signals)
+        
+       # self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pencolor_channel[0])
+        #self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
+        
+
         
 
     def browse_files(self):  # Browsing files function
@@ -124,35 +139,63 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.channel_combobox.currentIndex()==2:
             colorindex = int(self.Color_button.currentIndex())
             self.pencolor_channel[2]=self.pencolors[colorindex]
+        self.signals_plot_widget.clear()
         
-   
+
+        
+        
         if ptr <= 15:
-            if self.ChanneloneSelected==True:
-             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])  # Update the data.
-             self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)] )
-             if self.ChannelTwoSelected==True:
-                  self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])  # Update the data.
-                  self.signals_plot_widget.setXRange(0, x_axis1[(ptr * speed)] )
-                  if self.ChannelThreeSelected==True:
-                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
-                     self.signals_plot_widget.setXRange(0, x_axis1[(ptr * speed)] )
+
+            if self.ChanneloneSelected==True and self.show0==True:
+             
+             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)]) # Update the data.
+             self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)])
+            if self.ChannelTwoSelected==True and self.show1==True:
+            
+               self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])  # Update the data.
+               self.signals_plot_widget.setXRange(0, x_axis1[(ptr * speed)])
+            if self.ChannelThreeSelected==True and self.show2==True:
+               self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
+               self.signals_plot_widget.setXRange(0, x_axis2[(ptr * speed)])
             
                      
                 
         else:
-            if self.ChanneloneSelected==True:
-             self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])  
-             self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])         
-             if self.ChannelTwoSelected==True :
-                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
-                 self.signals_plot_widget.setXRange(x_axis1[(ptr * speed) - 15], x_axis1[(ptr * speed) - 1])
-                 if self.ChannelThreeSelected==True :
-                     self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
-                     self.signals_plot_widget.setXRange(x_axis2[(ptr * speed) - 15], x_axis2[(ptr * speed) - 1])
+
+            if self.ChanneloneSelected==True and self.show0==True:
+               self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
+               self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
+            if self.ChannelTwoSelected==True and self.show1==True:
+                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
+                self.signals_plot_widget.setXRange(x_axis1[(ptr * speed) - 15], x_axis1[(ptr * speed) - 1])
+            if self.ChannelThreeSelected==True and self.show2==True:
+                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
+                self.signals_plot_widget.setXRange(x_axis2[(ptr * speed) - 15], x_axis2[(ptr * speed) - 1])
        
         ptr += 1
 
+    def Hide_signals(self):
+      self.signals_plot_widget.clear()
+     
+      # if self.ChanneloneSelected==True:
+      if self.channel_combobox.currentIndex() == 0:
+         self.show0=False
+      # elif self.ChannelTwoSelected==True:
+      elif self.channel_combobox.currentIndex() == 1:
+          self.show1=False  
+      # elif self.ChannelTwoSelected==True:
+      elif self.channel_combobox.currentIndex() == 2:
+         self.show2=False  
 
+    def Show_signals(self) :
+       
+      if self.channel_combobox.currentIndex() == 0:
+         self.show0=True
+      elif self.channel_combobox.currentIndex() == 1:
+         self.show1=True
+      elif self.channel_combobox.currentIndex() == 2:
+         self.show2=True
+           
     def speed_up(self):
         global speed
         speed += 5
@@ -205,12 +248,14 @@ class MainWindow(QtWidgets.QMainWindow):
         global y_axis1
         global x_axis2
         global y_axis2
-
-        document = SimpleDocTemplate("statistics.pdf", pagesize=letter)
+        
+        
+        document = SimpleDocTemplate("report.pdf", pagesize=letter)
         items = [] 
         mean0, std_dev0, min_amplitude0, max_amplitude0, duration0 = self.data_stats(y_axis0, x_axis0)     
         mean1, std_dev1, min_amplitude1, max_amplitude1, duration1 = self.data_stats(y_axis1, x_axis1)
         mean2, std_dev2, min_amplitude2, max_amplitude2, duration2 = self.data_stats(y_axis2, x_axis2)
+
         
         data= [['','Channel 1', 'Channel 2', 'Channel 3'],
         ['Mean',mean0, mean1, mean2],
@@ -233,13 +278,6 @@ class MainWindow(QtWidgets.QMainWindow):
         pdf.savefig(self.get_channel2())
         pdf.savefig(self.get_channel3())
         pdf.close()
-
-        pdfs = ['figures.pdf', 'statistics.pdf']
-        merger = PdfFileMerger()
-        for pdf in pdfs:
-            merger.append(pdf)
-        merger.write("Report.pdf")
-        merger.close()
 
     def start(self):
         self.timer.start(150)
