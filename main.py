@@ -172,10 +172,10 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.ChannelTwoSelected==True and self.show1==True:
             
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])  # Update the data.
-               self.signals_plot_widget.setXRange(0, x_axis1[(ptr * speed)])
+               self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)])
             if self.ChannelThreeSelected==True and self.show2==True:
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
-               self.signals_plot_widget.setXRange(0, x_axis2[(ptr * speed)])
+               self.signals_plot_widget.setXRange(0, x_axis0[(ptr * speed)])
         elif self.size > 0 and self.status_slider==1:
             
             if self.ChanneloneSelected==True and self.show0==True:
@@ -198,10 +198,10 @@ class MainWindow(QtWidgets.QMainWindow):
                self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
             if self.ChannelTwoSelected==True and self.show1==True:
                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
-                self.signals_plot_widget.setXRange(x_axis1[(ptr * speed) - 15], x_axis1[(ptr * speed) - 1])
+                self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
             if self.ChannelThreeSelected==True and self.show2==True:
                 self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
-                self.signals_plot_widget.setXRange(x_axis2[(ptr * speed) - 15], x_axis2[(ptr * speed) - 1])
+                self.signals_plot_widget.setXRange(x_axis0[(ptr * speed) - 15], x_axis0[(ptr * speed) - 1])
        
         ptr += 1
 
@@ -230,6 +230,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def speed_up(self):
         global speed
         speed += 5
+        if speed>20:
+            speed=20
 
     def speed_down(self):
         global speed
