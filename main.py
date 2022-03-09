@@ -74,6 +74,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show2=True
         self.Show_Button.clicked.connect(self.Show_signals) 
         self.Hide_Button.clicked.connect(self.Hide_signals)
+        self.horizontalSlider.sliderMoved.connect(self.ChangeValue)
+        self.horizontalSlider.valueChanged.connect(self.ChangeValue)
+        self.horizontalSlider.sliderReleased.connect(self.sliderrelase)
+        self.size=0
+        self.status_slider = 0
+        self.int=0
+        self.fin=0.01
         
        # self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pencolor_channel[0])
         #self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
@@ -155,7 +162,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         
         
-        if ptr <= 15:
+        if ptr <= 15 and self.status_slider==0:
+            #self.signals_plot_widget.setXRange(0, ptr)
 
             if self.ChanneloneSelected==True and self.show0==True:
              
@@ -168,10 +176,22 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.ChannelThreeSelected==True and self.show2==True:
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])  # Update the data.
                self.signals_plot_widget.setXRange(0, x_axis2[(ptr * speed)])
+        elif self.size > 0 and self.status_slider==1:
             
+            if self.ChanneloneSelected==True and self.show0==True:
+               self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
+               self.signals_plot_widget.setXRange(x_axis0[(self.size * speed) - 15], x_axis0[(self.size * speed) - 1])
+            if self.ChannelTwoSelected==True and self.show1==True:
+                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[1]).setData(x_axis1[0:(ptr * speed)], y_axis1[0:(ptr * speed)])
+                self.signals_plot_widget.setXRange(x_axis1[(self.size* speed) - 15], x_axis1[(self.size * speed) - 1])
+            if self.ChannelThreeSelected==True and self.show2==True:
+                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[2]).setData(x_axis2[0:(ptr * speed)], y_axis2[0:(ptr * speed)])
+                self.signals_plot_widget.setXRange(x_axis2[(self.size * speed) - 15], x_axis2[(self.size * speed) - 1])
+       
+        elif ptr>15 and self.status_slider==0:
                      
-                
-        else:
+         # self.signals_plot_widget.setXrange
+        
 
             if self.ChanneloneSelected==True and self.show0==True:
                self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
@@ -217,6 +237,13 @@ class MainWindow(QtWidgets.QMainWindow):
             speed -= 5
         else: 
             speed = 1
+    def ChangeValue(self):
+        self.status_slider = 1
+        
+        self.size = self.horizontalSlider.value()
+        self.update_plot_data()
+    def sliderrelase(self):
+     self.status_slider=0
  
 
     def data_stats(self, amplitude, time): # function to calculate stats for exporting to pdf
