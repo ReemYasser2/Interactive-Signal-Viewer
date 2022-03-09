@@ -56,8 +56,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.Save_Button.clicked.connect(self.save)  
         self.play_button.clicked.connect(self.start)
         self.stop_button.clicked.connect(self.stop)
-        self.horizontalScrollBar.setMaximum(len(self.x_csv))
-        self.horizontalScrollBar.setValue(0)
         self.speed_up_button.clicked.connect(self.speed_up)
         self.speed_down_button.clicked.connect(self.speed_down)
         self.zoom_IN_button.clicked.connect(self.zoomIn)
@@ -116,14 +114,12 @@ class MainWindow(QtWidgets.QMainWindow):
          x_axis0=self.x_csv
          y_axis0=self.y_csv
          self.ChanneloneSelected = True
-         self.horizontalScrollBar.setMaximum(int(max(x_axis0)))
          self.timer.start()
          
         elif int(self.channel_combobox.currentIndex()) == 1:
          x_axis1=self.x_csv
          y_axis1=self.y_csv
          self.ChannelTwoSelected = True
-         self.horizontalScrollBar.setMaximum(int(max(x_axis1)))
          self.timer.start()
          
          
@@ -131,7 +127,6 @@ class MainWindow(QtWidgets.QMainWindow):
          x_axis2=self.x_csv
          y_axis2=self.y_csv
          self.ChannelThreeSelected = True
-         self.horizontalScrollBar.setMaximum(int(max(x_axis2)))
          self.timer.start()
 
         self.signals_plot_widget.setYRange(-1,1)
@@ -140,17 +135,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_plot_data(self):
         global ptr, speed
         self.pencolors=['b','r','g']
+        self.labelcolors=['color: blue', 'color: red','color: green']
         #currentcolor = str(self.Color_button.currentText())
         global colorindex
         if self.channel_combobox.currentIndex()==0:
             colorindex = int(self.Color_button.currentIndex())
             self.pencolor_channel[0]=self.pencolors[colorindex]
+            self.Ch1Label.setStyleSheet(str(self.labelcolors[colorindex]))
         elif self.channel_combobox.currentIndex()==1:
             colorindex = int(self.Color_button.currentIndex())
-            self.pencolor_channel[1]=self.pencolors[colorindex]      
+            self.pencolor_channel[1]=self.pencolors[colorindex] 
+            self.Ch2Label.setStyleSheet(str(self.labelcolors[colorindex]))     
         elif self.channel_combobox.currentIndex()==2:
             colorindex = int(self.Color_button.currentIndex())
             self.pencolor_channel[2]=self.pencolors[colorindex]
+            self.Ch3Label.setStyleSheet(str(self.labelcolors[colorindex]))
         self.signals_plot_widget.clear()
         
 
