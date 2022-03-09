@@ -14,6 +14,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import matplotlib.backends.backend_pdf
 import pandas as pd
 from PyPDF2 import PdfFileMerger
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from scipy import signal
 ptr = 0
 speed = 1
 x_axis0 = [0,0]
@@ -51,7 +53,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(150)
         self.timer.timeout.connect(self.update_plot_data)
-
+        self.figure=plt.figure(figsize=(15,5))
+        self.Canvas=FigureCanvas(self.figure)
         self.Browse_Button.clicked.connect(self.browse_files)
         self.Save_Button.clicked.connect(self.save)  
         self.play_button.clicked.connect(self.start)
@@ -77,15 +80,51 @@ class MainWindow(QtWidgets.QMainWindow):
         self.horizontalSlider.sliderMoved.connect(self.ChangeValue)
         self.horizontalSlider.valueChanged.connect(self.ChangeValue)
         self.horizontalSlider.sliderReleased.connect(self.sliderrelase)
+
+        self.maximum_verticalSlider.valueChanged.connect(self.ChangeSpectrogram)
+        self.minimum_verticalSlider.valueChanged.connect(self.ChangeSpectrogram)
+        self.SpectogramPalette.currentIndexChanged.connect(self.changePalette)
+        #viridis , inferno , plasma and magma
+        self.colormap = self.SpectogramPalette.currentText()
         self.size=0
         self.status_slider = 0
         self.int=0
         self.fin=0.01
-        
+        self.figure=plt.figure(figsize=(15,5))
+        self.Canvas=FigureCanvas(self.figure)
        # self.data_line = self.signals_plot_widget.plot([0], [0], pen=self.pencolor_channel[0])
         #self.signals_plot_widget.plot([0], [0],pen=self.pencolor_channel[0]).setData(x_axis0[0:(ptr * speed)], y_axis0[0:(ptr * speed)])
 
+    def changePalette(self):
+        self.colormap = self.SpectogramPalette.currentText()
+        self.spectrogram()
 
+    def spectrogram(self):
+        fs=1/(self.x_csv[1]-self.x_csv[0])
+        self.frequency, self.time, self.Sxx = signal.spectrogram(self.x_csv, fs=fs)
+        self.SpectogramWidget.canvas.axes.pcolormesh(self.time, self.frequency, 10*np.log10(self.Sxx), shading='auto', cmap=self.colormap)
+        self.SpectogramWidget.canvas.draw()
+        self.Canvas.draw()
+        self.maximum_verticalSlider.setMaximum(int(max(self.frequency)))
+        self.maximum_verticalSlider.setMinimum(int(min(self.frequency)))
+        self.minimum_verticalSlider.setMaximum(int(max(self.frequency)))
+        self.minimum_verticalSlider.setMinimum(int(min(self.frequency)))
+
+   
+    
+    def ChangeSpectrogram(self): 
+        fs=1/(self.x_csv[1]-self.x_csv[0])
+        self.frequency, self.time, self.Sxx = signal.spectrogram(self.x_csv, fs=fs)
+
+        freq_slice = np.where((self.frequency >= self.minimum_verticalSlider.value()) & (self.frequency <= self.maximum_verticalSlider.value()))
+        # keep only frequencies of interest
+        self.frequency   =  self.frequency[freq_slice]
+        self.Sxx = self.Sxx[freq_slice,:][0]
+        #viridis , inferno , plasma and magma
+        self.SpectogramWidget.canvas.axes.pcolormesh(self.time, self.frequency, 10*np.log10(self.Sxx), shading='auto', cmap=self.colormap)
+        self.SpectogramWidget.canvas.draw()
+        self.Canvas.draw()
+      
     def zoomIn(self):
         self.signals_plot_widget.setYRange(-0.99 * self.zoom_factor, 0.99 * self.zoom_factor)
         self.zoom_factor -=0.05
@@ -110,24 +149,23 @@ class MainWindow(QtWidgets.QMainWindow):
         global x_axis2
         global y_axis2
 
-        self.SpectogramWidget.canvas.axes.clear()
-        self.SpectogramWidget.canvas.axes.specgram(self.y_csv, Fs=1/max(self.y_csv), cmap="rainbow")
-        self.SpectogramWidget.canvas.axes.legend(('cosinus', 'sinus'),loc='upper right')
-        self.SpectogramWidget.canvas.axes.set_title('Spectrogram')
-        self.SpectogramWidget.canvas.draw()
         self.timer.start()
-             
+    
         if int(self.channel_combobox.currentIndex()) == 0:
          x_axis0=self.x_csv
          y_axis0=self.y_csv
          self.ChanneloneSelected = True
          self.timer.start()
+         self.spectrogram()
+
          
         elif int(self.channel_combobox.currentIndex()) == 1:
          x_axis1=self.x_csv
          y_axis1=self.y_csv
          self.ChannelTwoSelected = True
          self.timer.start()
+         self.spectrogram()
+
          
          
         elif int(self.channel_combobox.currentIndex()) == 2:
@@ -135,6 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
          y_axis2=self.y_csv
          self.ChannelThreeSelected = True
          self.timer.start()
+         self.spectrogram()
 
         self.signals_plot_widget.setYRange(-1,1)
               
@@ -279,6 +318,17 @@ class MainWindow(QtWidgets.QMainWindow):
         plt.ylabel('Amplitude')
         return fig
 
+    def get_spectrogram(self):
+        global x_axis2
+        global y_axis2
+        fs=1/(self.x_csv[1]-self.x_csv[0])
+        fig = plt.figure(figsize=(10, 5))
+        self.frequency, self.time, self.Sxx = signal.spectrogram(self.x_csv, fs=fs)
+        plt.pcolormesh(self.time, self.frequency, 10*np.log10(self.Sxx), shading='auto', cmap=self.colormap)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        return fig
+
     def save(self):
         global x_axis0
         global y_axis0
@@ -313,10 +363,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         pdf = matplotlib.backends.backend_pdf.PdfPages("figures.pdf")
         pdf.savefig(self.get_channel1())
+        pdf.savefig(self.get_spectrogram())
         pdf.savefig(self.get_channel2())
+        pdf.savefig(self.get_spectrogram())
         pdf.savefig(self.get_channel3())
+        pdf.savefig(self.get_spectrogram())
         pdf.close()
 
+        
         pdfs = ['figures.pdf', 'statistics.pdf']
         merger = PdfFileMerger()
         for pdf in pdfs:
