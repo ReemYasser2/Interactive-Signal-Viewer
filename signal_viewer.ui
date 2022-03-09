@@ -385,6 +385,49 @@ font:(255,255,255);</string>
       <string>&gt;&gt;</string>
      </property>
     </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>310</x>
+       <y>110</y>
+       <width>181</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Spectogram Color</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="SpectogramPalette">
+     <property name="geometry">
+      <rect>
+       <x>330</x>
+       <y>140</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>viridis</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>inferno</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>plasma</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>magma</string>
+      </property>
+     </item>
+    </widget>
    </widget>
    <widget class="QPushButton" name="Save_Button">
     <property name="geometry">
