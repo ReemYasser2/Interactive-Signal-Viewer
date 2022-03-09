@@ -30,7 +30,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         #Load the UI Page
         super(MainWindow, self).__init__(*args, **kwargs)
-        uic.loadUi('dspxc2.ui', self)
+        uic.loadUi('signal_viewer.ui', self)
         # defining variables for plot
         self.counter = 0
         self.max_time = 0.12
